@@ -24,18 +24,44 @@ pub fn aggregate(
 
 /// Computes bucketed aggregates for rows.
 struct Aggregator {
+    
     /// Bucketed accumulators (by group_by values).
     ///
     /// For example, if we are computing COUNT and MAX aggregations over "GROUP BY id"
     /// and "GROUP BY name, age, height", then `buckets` would have two entries:
     /// - vec![ id ]                 -> vec![ Accumulator::Count, Accumulator::Max ]
+    /// Key might be: vec![Field::Integer(5)]
+    /// Value might be: vec![Count(5), Max(450000)]
     /// - vec![ name, age, height ]  -> vec![ Accumulator::Count, Accumulator::Max ]
     buckets: BTreeMap<Vec<Field>, Vec<Accumulator>>,
+    
     /// The set of empty accumulators. Used to create new buckets.
+    /// Contains one accumulator for each aggregate function in the query
+    /// Example: For COUNT(*), SUM(salary), AVG(age):
+    /// empty: vec![
+    //     CountAccumulator::new(),
+    //     SumAccumulator::new(), 
+    //     AvgAccumulator::new()
+    // ]
     empty: Vec<Accumulator>,
+
     /// Group by expressions. Indexes map to bucket values.
+    /// Defines which columns/expressions determine the grouping:
+    /// Example: GROUP BY dept, location:
+    // group_by: vec![
+    //     Expression::Column("dept".to_string()),
+    //     Expression::Column("location".to_string())
+    // ]
     group_by: Vec<Expression>,
+
     /// Expressions to accumulate. Indexes map to accumulators.
+    /// Defines what values to feed into each accumulator:
+    /// Example: For COUNT(*), SUM(salary), AVG(age):
+    /// expressions: vec![
+    //     Expression::Literal(1),           // COUNT(*) - always 1
+    //     Expression::Column("salary"),     // SUM(salary)
+    //     Expression::Column("age")         // AVG(age)
+    // ]
     expressions: Vec<Expression>,
 }
 
@@ -43,13 +69,18 @@ impl Aggregator {
     /// Creates a new aggregator for the given GROUP BY buckets and aggregates.
     fn new(group_by: Vec<Expression>, aggregates: Vec<Aggregate>) -> Self {
         use Aggregate::*;
+        
+        // Create new accumulators
         let accumulators = aggregates.iter().map(Accumulator::new).collect();
+        
+        // Turn aggregate into expressions
         let expressions = aggregates
             .into_iter()
             .map(|aggregate| match aggregate {
                 Average(expr) | Count(expr) | Max(expr) | Min(expr) | Sum(expr) => expr,
             })
             .collect();
+        
         Self {
             buckets: BTreeMap::new(),
             empty: accumulators,
@@ -60,7 +91,9 @@ impl Aggregator {
 
     /// Adds a row to the aggregator.
     fn add(&mut self, row: Row) -> Result<()> {
-        // Compute the bucket value.
+        // Compute the bucket value
+        // Get the "group by" values related to the aggregation
+        // For example, if we group by major, then bucket might be "Computer Science", "Math"
         let bucket: Vec<Field> = self
             .group_by
             .iter()
@@ -73,7 +106,17 @@ impl Aggregator {
         // or initialize an empty accumulator if an entry doesn't exist. Then, you'll
         // have to update each accumulator with the result of evaluating the accumulator's
         // corresponding expression on the row.
-        todo!();
+        
+        // Get or create the accumulators for this bucket
+        let accumulators = self.buckets.entry(bucket).or_insert_with(|| self.empty.clone());
+        
+        // For each expression, evaluate it and feed the result to the corresponding accumulator
+        for (i, expression) in self.expressions.iter().enumerate(){
+            let value = expression.evaluate(Some(&row))?;
+            accumulators[i].add(value)?;
+        }
+
+        Ok(())       
     }
 
     /// Returns a row iterator over the aggregate result.
@@ -125,7 +168,16 @@ enum Accumulator {
 impl Accumulator {
     /// Creates a new accumulator from an aggregate kind.
     fn new(aggregate: &Aggregate) -> Self {
-        todo!();
+        match aggregate {
+            &Aggregate::Average(_) => Self::Average{
+                count: 0,
+                sum: Field::Integer(0)
+            },
+            &Aggregate::Count(_) => Self::Count(0),
+            &Aggregate::Max(_) => Self::Max(None),
+            &Aggregate::Min(_) => Self::Min(None),
+            &Aggregate::Sum(_) => Self::Sum(None),
+        }
     }
 
     /// Adds a value to the accumulator.
@@ -167,11 +219,66 @@ impl Accumulator {
     ///  }
     /// ```
     fn add(&mut self, value: Field) -> Result<()> {
-        todo!();
+        match self {
+            // It is an Average accumulator            
+            Accumulator::Average { count, sum } => {
+                *sum = sum.checked_add(&value)?;
+                *count += 1;
+            },
+            
+            // It is a Count accumulator            
+            Accumulator::Count(count) => {
+                // Only count non-NULL values
+                if !matches!(value, Field::Null) {
+                    *count += 1;
+                } else {
+                }
+            },
+            
+            // It is a Max accumulator            
+            Accumulator::Max(Some(max)) => {
+                if value > *max {
+                    *max = value;
+                }
+            },
+            Accumulator::Max(max @ None) => {
+                *max = Some(value)
+            },
+
+            // It is a Min accumulator            
+            Accumulator::Min(Some(min)) => {
+                if value < *min {
+                    *min = value;
+                }
+            },
+            Accumulator::Min(min @ None) => {
+                *min = Some(value)
+            },
+            
+            // It is a Sum accumulator
+            Accumulator::Sum(Some(sum)) => *sum = sum.checked_add(&value)?,
+            Accumulator::Sum(sum @ None) => *sum = Some(Field::Integer(0).checked_add(&value)?),
+        }
+
+        Ok(())
     }
 
     /// Returns the aggregate value.
     fn value(self) -> Result<Field> {
-        todo!();
+        match self {
+            Accumulator::Average { count, sum } => {
+                if count == 0 {
+                    Ok(Field::Null)
+                }
+                else{
+                    let divisor = Field::Integer(count as i32);
+                    sum.checked_div(&divisor)
+                }
+            },
+            Accumulator::Count(count) => Ok(Field::Integer(count)),
+            Accumulator::Max(field) => Ok(field.unwrap_or(Field::Null)),
+            Accumulator::Min(field) => Ok(field.unwrap_or(Field::Null)),
+            Accumulator::Sum(field) => Ok(field.unwrap_or(Field::Null))
+        }
     }
 }
