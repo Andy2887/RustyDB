@@ -138,7 +138,6 @@ impl BufferPoolManager {
     /// - `Some(PageId)`: The identifier of the newly created page if successful.
     /// - `None`: If no new page could be created due to all frames being in use.
     pub fn new_page(&mut self) -> Option<PageId> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
 
         let replacer_binding = Arc::clone(&self.replacer);
         let mut replacer = replacer_binding.write().unwrap();
@@ -155,8 +154,6 @@ impl BufferPoolManager {
         self.increment_pin_count(&page_id);
 
         Some(page_id)
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Fetches a page from the buffer pool.
@@ -185,8 +182,6 @@ impl BufferPoolManager {
     /// - `None`: If the `page_id` cannot be fetched due to all frames being
     ///   in use and non-evictable.
     pub fn fetch_page(&mut self, page_id: &PageId) -> Option<TablePageHandle> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let disk_binding = Arc::clone(&self.disk_manager);
         let mut disk_writer = disk_binding.write().unwrap();
         let replacer_binding = Arc::clone(&self.replacer);
@@ -206,8 +201,6 @@ impl BufferPoolManager {
         self.increment_pin_count(page_id);
 
         self.pages.get(frame_id).map(Arc::clone)
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Unpins a page from the buffer pool.
@@ -235,7 +228,6 @@ impl BufferPoolManager {
     /// - `false`: If the page was not in the buffer pool or its pin count was
     ///   zero or less before this call.
     pub fn unpin_page(&mut self, page_id: &PageId, is_dirty: bool) -> bool {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
         let pin_count = self
             .get_pin_count(page_id)
             .expect(NO_CORRESPONDING_PAGE_MSG);
@@ -256,7 +248,6 @@ impl BufferPoolManager {
                 true
             }
         }
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Flushes a page to disk.
@@ -273,8 +264,6 @@ impl BufferPoolManager {
     /// # Parameters
     /// - `page_id`: The identifier of the page to be flushed.
     pub fn flush_page(&mut self, page_id: &PageId) {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let binding = Arc::clone(&self.disk_manager);
         let mut disk_writer = binding.write().unwrap();
 
@@ -283,21 +272,15 @@ impl BufferPoolManager {
 
         disk_writer.write_page(page.clone());
         page.set_is_dirty(false);
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Flush all the page in the buffer pool to disk.
     pub fn flush_all_pages(&mut self) {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let page_ids: Vec<PageId> = self.page_table.keys().cloned().collect();
 
         for page_id in page_ids {
             self.flush_page(&page_id);
         }
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// If the page identified by `page_id` is not in the buffer pool, this
@@ -314,8 +297,6 @@ impl BufferPoolManager {
     /// - `true`: If the page was successfully deleted.
     /// - `false`: If the page was found but could not be deleted (e.g., it was pinned).
     pub fn delete_page(&mut self, page_id: PageId) -> bool {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let pin_count = self
             .get_pin_count(&page_id)
             .expect(NO_CORRESPONDING_PAGE_MSG);
@@ -333,8 +314,6 @@ impl BufferPoolManager {
         self.remove_from_buffer(&page_id, &mut replacer);
         disk_writer.deallocate_page(&page_id);
         true
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     pub fn size(&self) -> usize {

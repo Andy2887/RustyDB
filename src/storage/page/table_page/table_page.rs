@@ -167,8 +167,6 @@ impl Page for TablePage {
     /// - `Some(Tuple)`: A Tuple instance
     /// - `Error`: If the `RecordID` is invalid to be used on this page
     fn get_tuple(&self, rid: &RecordId) -> Result<Tuple> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         // Invalid Record ID
         if rid.page_id() != self.page_id || rid.slot_id() >= self.total_tuple_count() {
             return Result::from(Error::InvalidInput(rid.to_string()));
@@ -184,8 +182,6 @@ impl Page for TablePage {
         let offset = tuple_info.offset as usize;
         let size_bytes = tuple_info.size_bytes as usize;
         Ok(Tuple::from(&self.data[offset..(offset + size_bytes)]))
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Insert a tuple into the table page, and returns its corresponding `SlotID` on the page
@@ -206,8 +202,6 @@ impl Page for TablePage {
         meta: TupleMetadata,
         tuple: Tuple,
     ) -> Option<Self::InsertOutputType> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let offset = self.get_next_tuple_offset(&tuple)? as usize;
         // Update copy payload data into the page's memory
         self.data[offset..(offset + tuple.data.len())].copy_from_slice(&tuple.data);
@@ -226,8 +220,6 @@ impl Page for TablePage {
             self.tuple_cnt += 1;
         }
         Some(slot)
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Get the metadata of the tuple using the `RecordId`
@@ -243,8 +235,6 @@ impl Page for TablePage {
     /// - `Some(TupleMetadata)`: the metadata of the Tuple
     /// - `Error`: If the `RecordID` is invalid to be used on this page
     fn get_tuple_metadata(&self, rid: &RecordId) -> Result<TupleMetadata> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         // Invalid Record ID
         if rid.page_id() != self.page_id || rid.slot_id() >= self.total_tuple_count() {
             return Result::from(Error::InvalidInput(rid.to_string()));
@@ -255,8 +245,6 @@ impl Page for TablePage {
             return Result::from(Error::OutOfBounds);
         }
         Ok(self.tuple_info[rid.slot_id() as usize].metadata)
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Update the metadata of the tuple
@@ -272,8 +260,6 @@ impl Page for TablePage {
     /// # Returns
     /// - `Error`: If the `RecordID` is invalid to be used on this page
     fn update_tuple_metadata(&mut self, metadata: &TupleMetadata, rid: &RecordId) -> Result<()> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         // Invalid Record ID
         if rid.page_id() != self.page_id || rid.slot_id() >= self.total_tuple_count() {
             return Result::from(Error::InvalidInput(rid.to_string()));
@@ -286,8 +272,6 @@ impl Page for TablePage {
 
         self.tuple_info[slot].metadata = *metadata;
         Ok(())
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Return a boolean value indicating whether the page is dirty
@@ -295,11 +279,7 @@ impl Page for TablePage {
     /// # Returns
     /// - `bool`: True if the page is dirty; False if it is not
     fn get_is_dirty(&self) -> bool {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         self.is_dirty
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Set the dirty flag of the page and track if it changed
@@ -310,15 +290,11 @@ impl Page for TablePage {
     /// # Returns
     /// - `bool`: True if dirty state changed; False if it remained the same
     fn set_is_dirty(&mut self, is_dirty: bool) -> bool {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         if self.is_dirty == is_dirty {
             return false;
         }
         self.is_dirty = is_dirty;
         true
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     fn page_id(&self) -> &PageId {

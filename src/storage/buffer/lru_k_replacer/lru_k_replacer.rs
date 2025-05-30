@@ -31,22 +31,14 @@ impl LRUKNode {
     /// - the k'th most recent timestamp's distance from the current timestamp if k accesses
     ///   have been recorded, and `usize::MAX` otherwise
     pub(crate) fn get_backwards_k_distance(&self, current_timestamp: usize) -> usize {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         if self.has_infinite_backwards_k_distance() {
             return INF;
         }
         current_timestamp - self.get_kth_most_recent_timestamp()
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     pub(crate) fn has_infinite_backwards_k_distance(&self) -> bool {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         self.history.len() < self.k
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     ////////////////////////////// Begin: Not Visible to Students //////////////////////////////
@@ -110,15 +102,11 @@ impl LRUKReplacer {
     /// - an Option that is either `Some(frame_id)` if a frame with id `frame_id` was evicted, and
     ///   `None` otherwise
     pub fn evict(&mut self) -> Option<FrameId> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let frame_id = self.get_frame_to_evict()?;
         self.evict_frame(&frame_id);
         self.decrement_current_size();
 
         Some(frame_id)
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Record an access to a frame at the current timestamp.
@@ -130,8 +118,6 @@ impl LRUKReplacer {
     /// - `frame_id`: The id of the frame that was accessed
     /// - `access_type`: The type of access that occurred (e.g., Lookup, Scan, Index)
     pub fn record_access(&mut self, frame_id: &FrameId, _access_type: AccessType) {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         if *frame_id >= self.max_size {
             panic!(
                 "FrameId {frame_id} is invalid (replacer size: {})",
@@ -144,8 +130,6 @@ impl LRUKReplacer {
             self.node_store.insert(*frame_id, node);
         }
         self.modify_node_history(frame_id);
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Set the evictable status of a frame. Note that replacer's curr_size is equal
@@ -162,8 +146,6 @@ impl LRUKReplacer {
     /// - `frame_id`: id of the frame whose 'evictable' status will be modified
     /// - `set_evictable`: whether the given frame is evictable or not
     pub fn set_evictable(&mut self, frame_id: &FrameId, set_evictable: bool) {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let node = self
             .node_store
             .get_mut(frame_id)
@@ -177,8 +159,6 @@ impl LRUKReplacer {
             true => self.increment_current_size(),
             false => self.decrement_current_size(),
         }
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Remove an evictable frame from the replacer, along with its access history.
@@ -196,8 +176,6 @@ impl LRUKReplacer {
     /// # Parameters
     /// - `frame_id`: id of the frame to be removed
     pub fn remove(&mut self, frame_id: &FrameId) {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         let maybe_node = self.node_store.get(frame_id);
         if maybe_node.is_none() {
             return;
@@ -213,8 +191,6 @@ impl LRUKReplacer {
 
         self.node_store.remove(frame_id);
         self.decrement_current_size();
-
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     #[allow(dead_code)]

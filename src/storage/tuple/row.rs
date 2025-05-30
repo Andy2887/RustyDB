@@ -130,8 +130,6 @@ impl Row {
     ///   a fixed length field's stored_offset is to the offset from the start of
     ///   the field data portion (possibly not the beginning of the byte stream!)
     pub fn serialize(&self, schema: &Table) -> Result<Vec<u8>> {
-        ////////////////////////////// Begin: Students Implement  //////////////////////////////
-
         // Ensure the number of values matches the schema column count
         assert_eq!(self.values.len(), schema.col_count());
 
@@ -188,7 +186,6 @@ impl Row {
         }
 
         Ok(data)
-        ////////////////////////////// End: Students Implement  //////////////////////////////
     }
 
     /// Deserializes a byte stream into a Row object.
