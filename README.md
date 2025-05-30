@@ -58,15 +58,5 @@ RustyDB is a educational database system that implements core database concepts 
 
 ## Acknowledgements
 
-This project was developed as part of **CS339: Introduction to Database Systems** at **Northwestern University**. The implementation builds upon starter code provided by the course, with student contributions focusing on core database system components.
-
-### Student Contributions
-
-- **Storage Engine Development**: Developed a comprehensive storage engine for a relational database system using Rust, implementing efficient data management and persistence mechanisms
-
-- **B+-Tree Indexing**: Implemented B+-tree indexing structure enabling efficient record lookups, updates, and range queries for optimal database performance
-
-- **Database Operators**: Engineered essential database operators including filters, joins, and aggregation functions to execute complex SQL queries with proper optimization
-
-The project demonstrates practical implementation of fundamental database concepts including buffer pool management, query execution, and storage optimization techniques covered in the CS339 curriculum.
+This project was developed as part of **CS339: Introduction to Database Systems** at **Northwestern University**. The implementation builds upon starter code provided by the course, with student contributions focusing on core database system components such as storage engine, query planner and executors.
 
